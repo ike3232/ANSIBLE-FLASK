@@ -1,0 +1,80 @@
+- name: practice playbook
+  hosts: all
+  become: yes
+  tasks:
+    - name: apt update
+      apt:
+        name: nginx
+        update_cache: yes
+
+
+    - name: sudo apt install python3-pip
+      apt:
+        name: python3-pip
+        state: latest
+    
+    - name: pip install virtualenv
+      pip:
+        name: virtualenv
+        state: latest
+
+        
+    - name: git clone my project
+      git:
+        repo: https://github.com/ike3232/Sudoku-Web-Game-flask.git
+        dest: /home/azureuser/myproject
+      
+    - name: create virtualenv venv
+      shell: 
+        cmd: python3 -m virtualenv venv
+        chdir: /home/azureuser/myproject
+
+    - name: pip install -r /home/azureuser/myproject/requirements
+      pip:
+          requirements: /home/azureuser/myproject/requirements.txt
+          virtualenv: /home/azureuser/myproject/venv
+
+
+    - name: install gunicorn
+      pip:
+        name: gunicorn
+        virtualenv: /home/azureuser/myproject/venv
+
+    - name: copy my wsgi.py
+      copy:
+        src: wsgi.py
+        dest: /home/azureuser/myproject
+
+    - name: copy my gunicorn.service
+      copy:
+        src: gunicorn.service
+        dest: /etc/systemd/system/
+
+    - name: deamon reload
+      systemd:
+        daemon_reload: true
+
+    - name: started gunicorn.service
+      service: 
+        name: gunicorn.service
+        state: started
+        enabled: yes
+
+    - name: set nginx as proxy
+      copy:
+        src: nginx.conf
+        dest: /etc/nginx/sites-enabled/default
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+          
+
+        
+        
+
+
+
+
+ 
